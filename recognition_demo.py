@@ -13,6 +13,7 @@ import selectivesearch
 from skimage import transform
 import sys
 import time
+import math
 
 
 def read_image(image_path):
@@ -20,10 +21,21 @@ def read_image(image_path):
     return img
 
 
-def get_component_position(img):
+def get_component_position(img, is_using_thumb=True):
+    thumb_img = img
+    scale_index = 1
+    if is_using_thumb:
+        pixels = 300 * 400
+        original_w = img.shape[0]
+        original_h = img.shape[1]
+        original_pixels = original_w * original_h
+        scale_index = math.sqrt(original_pixels / pixels)
+        new_w = int(original_w / scale_index)
+        new_h = int(original_h / scale_index)
+        thumb_img = transform.resize(img, (new_w, new_h))
     # perform selective search
     img_lbl, regions = selectivesearch.selective_search(
-        img, scale=5000, sigma=0.9, min_size=10)
+        thumb_img, scale=5000, sigma=0.9, min_size=10)
 
     candidates = set()
     for r in regions:
@@ -31,13 +43,18 @@ def get_component_position(img):
         if r['rect'] in candidates:
             continue
         # excluding regions smaller than 2000 pixels
-        if r['size'] < 2000:
+        if r['size'] < 200:
             continue
         # distorted rects
-        x_, y_, w_, h_ = r['rect']
-        if w_ / h_ > 3 or h_ / w_ > 3:
+        x, y, w, h = r['rect']
+        if h == 0 or w == 0:
+            continue
+        if w / h > 4 or h / w > 4:
             continue
         candidates.add(r['rect'])
+    if is_using_thumb:
+        candidates = {tuple(int(loc * scale_index) for loc in candidate) for candidate in candidates}
+    # print(candidates)
     return candidates
 
 
@@ -111,7 +128,7 @@ h_aver = sum([group[3] for group in raw_blocks]) / len(raw_blocks)
 w_aver = sum([group[2] for group in raw_blocks]) / len(raw_blocks)
 # print(w_aver)
 
-size_index = 1.5
+size_index = 2.5
 size_filtered_blocks = [group for group in raw_blocks if
                         (group[2] <= w_aver * size_index and group[3] <= h_aver * size_index)]
 
@@ -149,7 +166,7 @@ input_shape = (w, h, c)
 learning_rate = 0.0001
 regularization_rate = 0.0001
 category_count = 13 + 1
-train_path = r'C:\Users\bunny\Desktop\mega_2560_cat\TRAIN/'
+train_path = r'C:\Users\bunny\Desktop\Iot\mega_2560_cat\TRAIN/'
 model = load_model(train_path + '/model.h5')
 
 cat = model.predict_classes(np.asarray(sub_images, np.float32))
