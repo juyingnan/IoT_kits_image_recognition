@@ -35,7 +35,7 @@ def get_component_position(img, is_using_thumb=True):
         thumb_img = transform.resize(img, (new_w, new_h))
     # perform selective search
     img_lbl, regions = selectivesearch.selective_search(
-        thumb_img, scale=5000, sigma=0.9, min_size=10)
+        thumb_img, scale=2000, sigma=0.2, min_size=60)
 
     candidates = set()
     for r in regions:
@@ -105,7 +105,7 @@ def draw_name_on_image(img, block_candidates):
     fig.savefig(result_path)
 
 
-img_path = r'C:/Users/bunny/Desktop/mega2560_raw/IMG_1287.JPG'
+img_path = r'C:/Users/bunny/Desktop/Iot/mega2560_raw/IMG_1287.JPG'
 if len(sys.argv) < 2:
     print("parameter: file path")
     print("now use default path")
