@@ -67,8 +67,22 @@ def _sim_fill(r1, r2, imsize):
 
 
 def _calc_sim(r1, r2, imsize):
-    return (_sim_colour(r1, r2) + _sim_texture(r1, r2)
-            + _sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_texture(r1, r2) + _sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
+    # return (_sim_colour(r1, r2))
+    # return (_sim_texture(r1, r2))
+    # return (_sim_size(r1, r2, imsize))
+    # return (_sim_fill(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_texture(r1, r2))
+    # return (_sim_colour(r1, r2) + _sim_size(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_fill(r1, r2, imsize))
+    # return ( _sim_texture(r1, r2) + _sim_size(r1, r2, imsize) )
+    # return (_sim_texture(r1, r2)  + _sim_fill(r1, r2, imsize))
+    # return (_sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_texture(r1, r2) + _sim_size(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_texture(r1, r2) + _sim_fill(r1, r2, imsize))
+    # return (_sim_colour(r1, r2) + _sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
+    # return (_sim_texture(r1, r2) + _sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
+    return (_sim_colour(r1, r2) + _sim_texture(r1, r2) + _sim_size(r1, r2, imsize) + _sim_fill(r1, r2, imsize))
 
 
 def _calc_colour_hist(img):
