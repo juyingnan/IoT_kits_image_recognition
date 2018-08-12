@@ -1,10 +1,3 @@
-# from tensorflow import keras
-# from tensorflow.python.keras import regularizers
-# from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
-# from tensorflow.python.keras.models import Sequential
-from keras.models import load_model
-import tensorflow as tf
-from tensorflow.python.keras.backend import set_session
 import numpy as np
 from skimage import io
 import matplotlib.pyplot as plt
@@ -35,7 +28,7 @@ def get_component_position(img, is_using_thumb=True):
         thumb_img = transform.resize(img, (new_w, new_h))
     # perform selective search
     img_lbl, regions = selectivesearch.selective_search(
-        thumb_img, scale=2000, sigma=0.2, min_size=60)
+        thumb_img, scale=4000, sigma=0.4, min_size=60)
 
     candidates = set()
     for r in regions:
@@ -49,8 +42,8 @@ def get_component_position(img, is_using_thumb=True):
         x, y, w, h = r['rect']
         if h == 0 or w == 0:
             continue
-        if w / h > 4 or h / w > 4:
-            continue
+        # if w / h > 4 or h / w > 4:
+        #     continue
         candidates.add(r['rect'])
     if is_using_thumb:
         candidates = {tuple(int(loc * scale_index) for loc in candidate) for candidate in candidates}
@@ -88,21 +81,31 @@ def draw_image(img, block_candidates):
     plt.show()
 
 
-def draw_name_on_image(img, block_candidates):
+def draw_name_on_image(img, block_candidates, pred_cat):
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(20, 20))
     plt.imshow(img)
-    for x_, y_, w_, h_ in block_candidates:
-        rect = mpatches.Rectangle(
-            (x_, y_), w_, h_, fill=False, edgecolor='red', linewidth=1)
-        ax.add_patch(rect)
-    for wachBlock in block_candidates:
-        x = wachBlock[0]
-        y = wachBlock[1]
-        index = block_candidates.index(wachBlock)
-        plt.text(x, y, cat_list[cat[index]], color='green', fontsize=16)
+    for i in range(len(pred_cat)):
+        category, confidence = pred_cat[i]
+        if category != 0 and confidence > 0.50:
+            x_, y_, w_, h_ = block_candidates[i]
+
+            rect = mpatches.Rectangle((x_, y_), w_, h_, fill=False, edgecolor='red', linewidth=1)
+            ax.add_patch(rect)
+
+            plt.text(x_, y_, cat_list[category] + ' | ' + str(confidence), color='green', fontsize=16)
     # plt.show()
     fig.savefig(result_path)
+
+
+def get_max_and_confidence(pred_results):
+    cat_result = []
+    for _result in pred_results:
+        result_as_list = [v for v in _result]
+        max_confidence = max(result_as_list)
+        index = result_as_list.index(max_confidence)
+        cat_result.append((index, max_confidence))
+    return cat_result
 
 
 img_path = r'C:/Users/bunny/Desktop/Iot/mega2560_raw/IMG_1287.JPG'
@@ -133,12 +136,13 @@ size_filtered_blocks = [group for group in raw_blocks if
                         (group[2] <= w_aver * size_index and group[3] <= h_aver * size_index)]
 
 filtered_blocks = filter_block(size_filtered_blocks)
+filtered_blocks = list(raw_blocks)
 # print(len(filtered_blocks))
 fp.write(str(len(filtered_blocks)) + '\n')
 # draw_image(image, filtered_blocks)
 
-w = 200
-h = 200
+w = 300
+h = 300
 c = 3
 
 sub_images = []
@@ -158,6 +162,15 @@ pre_processing_time = pre_end_time - start_time
 # print(pre_processing_time)
 fp.write(str(pre_processing_time) + '\n')
 
+# TensorFlow part
+# from tensorflow import keras
+# from tensorflow.python.keras import regularizers
+# from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+# from tensorflow.python.keras.models import Sequential
+from keras.models import load_model
+import tensorflow as tf
+from tensorflow.python.keras.backend import set_session
+
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 set_session(tf.Session(config=config))
@@ -169,7 +182,10 @@ category_count = 13 + 1
 train_path = r'C:\Users\bunny\Desktop\Iot\mega_2560_cat\TRAIN/'
 model = load_model(train_path + '/model.h5')
 
-cat = model.predict_classes(np.asarray(sub_images, np.float32))
+# for img in sub_images:
+result = model.predict(np.asarray(sub_images, np.float32))
+# cat = model.predict_classes(np.asarray(sub_images, np.float32))
+cat = get_max_and_confidence(result)
 cat_list = [
     "blank",
     "gy-521_module",
@@ -186,7 +202,7 @@ cat_list = [
     "ultrasonic_sensor",
     "water_level_detection_sensor_module",
 ]
-draw_name_on_image(image, filtered_blocks)
+draw_name_on_image(image, filtered_blocks, cat)
 final_end_time = time.time()
 machine_learning_time = final_end_time - pre_end_time
 # print(machine_learning_time)
