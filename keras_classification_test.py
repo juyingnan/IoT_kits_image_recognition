@@ -36,31 +36,33 @@ def read_img_random(path, total_count):
             img = io.imread(im)
             if img.shape[2] == 4:
                 img = img[:, :, :3]
-            img = transform.resize(img, (w, h))
-            imgs.append(img)
-            labels.append(idx)
+            for angle in [0,90,180,270]:
+                _img = transform.rotate(img, angle)
+                _img = transform.resize(_img, (w, h))
+                imgs.append(_img)
+                labels.append(idx)
             if count % 100 == 0:
                 print("\rreading {0}/{1}".format(count, min(total_count, len(file_path_list))), end='')
         print('\r', end='')
     return np.asarray(imgs, np.float32), np.asarray(labels, np.int32)
 
 
-w = 200
-h = 200
+w = 300
+h = 300
 c = 3
 train_image_count = 1000
 val_image_count = train_image_count / 10
 test_image_count = train_image_count / 10
 input_shape = (w, h, c)
 learning_rate = 0.0001
-regularization_rate = 0.0001
+regularization_rate = 0.00001
 category_count = 13 + 1
-n_epoch = 300
+n_epoch = 200
 mini_batch_size = 16
 # data set path
-train_path = r'C:\Users\bunny\Desktop\mega_2560_cat\TRAIN/'
-val_path = r'C:\Users\bunny\Desktop\mega_2560_cat\TEST/'
-test_path = r'C:\Users\bunny\Desktop\mega_2560_cat\VAL/'
+train_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TRAIN/'
+val_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TEST/'
+test_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\VAL/'
 
 model = Sequential()
 
@@ -74,7 +76,7 @@ model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
 
 # Layer 2
 model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(4, 4)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
 
 # Layer 3
 model.add(Conv2D(128, (3, 3), activation='relu'))
