@@ -2,6 +2,8 @@ from skimage import io
 import skimage.segmentation
 import skimage.util
 from skimage import transform
+from skimage import filters
+from skimage import color
 import math
 import matplotlib.pyplot as plt
 # from matplotlib import cm
@@ -69,21 +71,39 @@ def save_img(img_mask, img_blocks, file_path, sub_title='', ground_truth=[]):
     plt.savefig(file_path)
 
 
+def get_thumb_image(img, ref_width=300, ref_height=400):
+    pixels = ref_width * ref_height
+    original_w = img.shape[0]
+    original_h = img.shape[1]
+    original_pixels = original_w * original_h
+    scale_index = math.sqrt(original_pixels / pixels)
+    new_w = int(original_w / scale_index)
+    new_h = int(original_h / scale_index)
+    thumb_img = transform.resize(img, (new_w, new_h))
+    return thumb_img
+
+
 def segment_image(img, scale, sigma, min_size, is_using_thumb=True):
     thumb_img = img
     if is_using_thumb:
-        pixels = 300 * 400
-        original_w = img.shape[0]
-        original_h = img.shape[1]
-        original_pixels = original_w * original_h
-        scale_index = math.sqrt(original_pixels / pixels)
-        new_w = int(original_w / scale_index)
-        new_h = int(original_h / scale_index)
-        thumb_img = transform.resize(img, (new_w, new_h))
-    im_mask = skimage.segmentation.felzenszwalb(
-        skimage.util.img_as_float(thumb_img), scale=scale, sigma=sigma, min_size=min_size)
-    # show_image(im_mask)
+        ref_w = 300
+        ref_h = 400
+        thumb_img = get_thumb_image(img, ref_w, ref_h)
+    im_mask = skimage.segmentation.felzenszwalb(skimage.util.img_as_float(thumb_img), scale=scale, sigma=sigma,
+                                                min_size=min_size)
+    show_image(im_mask)
     return im_mask
+
+
+def binary_segment_image(img, is_using_thumb=True):
+    thumb_img = color.rgb2gray(img)
+    if is_using_thumb:
+        ref_w = 300
+        ref_h = 400
+        thumb_img = get_thumb_image(thumb_img, ref_w, ref_h)
+    val = filters.threshold_otsu(thumb_img, 101)
+    mask = thumb_img < val
+    return mask
 
 
 def read_image(file_path):
@@ -97,9 +117,69 @@ def show_image(img):
     plt.show()
 
 
+def filter_block2(blocks):
+    THRESHOLD = 0.6
+    result = list(blocks)
+    has_overlap = True
+    while has_overlap is True:
+        has_overlap = False
+        for eachBlock in result:
+            if has_overlap is True:
+                break
+            for another_block in result:
+                if eachBlock == another_block:
+                    continue
+                # count overlap rate of two blocks
+                if calculate_overlap_rate(eachBlock, another_block) > THRESHOLD:
+                    result.append(get_overlap_block(eachBlock, another_block))
+                    result.remove(another_block)
+                    result.remove(eachBlock)
+                    has_overlap = True
+                    break
+    return result
+
+
+def calculate_overlap_rate(block_a, block_b):
+    a1x, a1y, w_, h_ = block_a
+    a2x = a1x + w_
+    a2y = a1y + h_
+    SA = (a2x - a1x) * (a2y - a1y)
+
+    b1x, b1y, w_, h_ = block_b
+    b2x = b1x + w_
+    b2y = b1y + h_
+    SB = (b2x - b1x) * (b2y - b1y)
+
+    SI = max(0, min(a2x, b2x) - max(a1x, b1x)) * max(0, min(a2y, b2y) - max(a1y, b1y))
+    SU = SA + SB - SI
+    overlap_ratio = SI / SU
+    return overlap_ratio
+
+
+def get_overlap_block(block_a, block_b):
+    a1x, a1y, w_, h_ = block_a
+    a2x = a1x + w_
+    a2y = a1y + h_
+
+    b1x, b1y, w_, h_ = block_b
+    b2x = b1x + w_
+    b2y = b1y + h_
+
+    c1x = min(a1x, b1x)
+    c1y = min(a1y, b1y)
+    c2x = max(a2x, b2x)
+    c2y = max(a2y, b2y)
+
+    return [c1x, c1y, c2x - c1x, c2y - c1y]
+
+
 def process_image(img, scale, sigma, min_size, file_path, is_using_thumb=True, ground_truth=[]):
     img_mask = segment_image(img, scale=scale, sigma=sigma, min_size=min_size, is_using_thumb=is_using_thumb)
+    # img_mask = binary_segment_image(img, is_using_thumb=False)
+    # raw_blocks = get_component_position(color.gray2rgb(img_mask), scale, sigma, min_size, is_using_thumb=is_using_thumb)
     raw_blocks = get_component_position(img, scale, sigma, min_size, is_using_thumb=is_using_thumb)
+    print(len(raw_blocks))
+    raw_blocks = filter_block2(raw_blocks)
     print(len(raw_blocks))
     save_img(img_mask, raw_blocks, file_path, ' | scale={0}, sigma={1}, min_size={2}'.format(scale, sigma, min_size),
              ground_truth=ground_truth)
@@ -147,11 +227,12 @@ ground_truth_test_image = [
     [2088, 2591, 366, 469],
 ]
 
-img_path = r'C:\Users\bunny\Desktop\graph_test\100\test.JPG'
+img_path = r'C:\Users\bunny\Desktop\graph_test\100\test.jpg'
 image = read_image(img_path)
 # from skimage import color
 # image = color.rgb2hsv(image)
 import time
+
 start = time.time()
 path_prefix = img_path.split('.')[0]
 for sc in range(4000, 4200, 200):
@@ -166,4 +247,4 @@ for sc in range(4000, 4200, 200):
     print(abo)
 # process_image(image, scale=2000, sigma=0.2, min_size=20, file_path=path_prefix + '_2000_20_20', is_using_thumb=True)
 end = time.time()
-print(end-start)
+print(end - start)
