@@ -58,7 +58,7 @@ learning_rate = 0.0001
 regularization_rate = 0.00001
 category_count = 13 + 1
 n_epoch = 200
-mini_batch_size = 16
+mini_batch_size = 64
 # data set path
 train_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TRAIN/'
 val_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TEST/'
@@ -68,14 +68,14 @@ model = Sequential()
 
 # Layer 1
 model.add(Conv2D(32,
-                 kernel_size=(3, 3),
+                 kernel_size=(5, 5),
                  strides=(1, 1),
                  activation='relu',
                  input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
 
 # Layer 2
-model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(64, (5, 5), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 # Layer 3
@@ -90,7 +90,7 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten(input_shape=input_shape))
 
 # fc layers
-model.add(Dense(256, activation='relu', kernel_regularizer=regularizers.l2(regularization_rate)))
+model.add(Dense(128, activation='relu', kernel_regularizer=regularizers.l2(regularization_rate)))
 model.add(Dense(64, activation='relu', kernel_regularizer=regularizers.l2(regularization_rate)))
 model.add(Dense(category_count, activation='softmax', kernel_regularizer=regularizers.l2(regularization_rate)))
 
