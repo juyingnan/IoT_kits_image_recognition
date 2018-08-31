@@ -70,6 +70,61 @@ def filter_block(blocks):
     return result
 
 
+def filter_block2(blocks):
+    THRESHOLD = 0.6
+    result = list(blocks)
+    has_overlap = True
+    while has_overlap is True:
+        has_overlap = False
+        for eachBlock in result:
+            if has_overlap is True:
+                break
+            for another_block in result:
+                if eachBlock == another_block:
+                    continue
+                # count overlap rate of two blocks
+                if calculate_overlap_rate(eachBlock, another_block) > THRESHOLD:
+                    result.append(get_overlap_block(eachBlock, another_block))
+                    result.remove(another_block)
+                    result.remove(eachBlock)
+                    has_overlap = True
+                    break
+    return result
+
+
+def calculate_overlap_rate(block_a, block_b):
+    a1x, a1y, w_, h_ = block_a
+    a2x = a1x + w_
+    a2y = a1y + h_
+    SA = (a2x - a1x) * (a2y - a1y)
+
+    b1x, b1y, w_, h_ = block_b
+    b2x = b1x + w_
+    b2y = b1y + h_
+    SB = (b2x - b1x) * (b2y - b1y)
+
+    SI = max(0, min(a2x, b2x) - max(a1x, b1x)) * max(0, min(a2y, b2y) - max(a1y, b1y))
+    SU = SA + SB - SI
+    overlap_ratio = SI / SU
+    return overlap_ratio
+
+
+def get_overlap_block(block_a, block_b):
+    a1x, a1y, w_, h_ = block_a
+    a2x = a1x + w_
+    a2y = a1y + h_
+
+    b1x, b1y, w_, h_ = block_b
+    b2x = b1x + w_
+    b2y = b1y + h_
+
+    c1x = min(a1x, b1x)
+    c1y = min(a1y, b1y)
+    c2x = max(a2x, b2x)
+    c2y = max(a2y, b2y)
+
+    return [c1x, c1y, c2x - c1x, c2y - c1y]
+
 def draw_image(img, block_candidates):
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(8, 8))
@@ -135,8 +190,8 @@ size_index = 2.5
 size_filtered_blocks = [group for group in raw_blocks if
                         (group[2] <= w_aver * size_index and group[3] <= h_aver * size_index)]
 
-filtered_blocks = filter_block(size_filtered_blocks)
-filtered_blocks = list(raw_blocks)
+filtered_blocks = filter_block2(size_filtered_blocks)
+# filtered_blocks = list(raw_blocks)
 # print(len(filtered_blocks))
 fp.write(str(len(filtered_blocks)) + '\n')
 # draw_image(image, filtered_blocks)
@@ -182,6 +237,7 @@ category_count = 13 + 1
 train_path = r'C:\Users\bunny\Desktop\Iot\mega_2560_cat\TRAIN/'
 model = load_model(train_path + '/model.h5')
 
+ml_start_time = time.time()
 # for img in sub_images:
 result = model.predict(np.asarray(sub_images, np.float32))
 # cat = model.predict_classes(np.asarray(sub_images, np.float32))
@@ -203,8 +259,8 @@ cat_list = [
     "water_level_detection_sensor_module",
 ]
 draw_name_on_image(image, filtered_blocks, cat)
-final_end_time = time.time()
-machine_learning_time = final_end_time - pre_end_time
+ml_end_time = time.time()
+machine_learning_time = ml_end_time - ml_start_time
 # print(machine_learning_time)
 fp.write(str(machine_learning_time) + '\n')
 fp.close()
