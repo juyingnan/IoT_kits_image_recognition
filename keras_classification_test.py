@@ -47,10 +47,10 @@ def read_img_random(path, total_count):
     return np.asarray(imgs, np.float32), np.asarray(labels, np.int32)
 
 
-w = 300
-h = 300
+w = 150
+h = 150
 c = 3
-train_image_count = 1000
+train_image_count = 10000
 val_image_count = train_image_count / 10
 test_image_count = train_image_count / 10
 input_shape = (w, h, c)
@@ -60,9 +60,9 @@ category_count = 13 + 1
 n_epoch = 200
 mini_batch_size = 64
 # data set path
-train_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TRAIN/'
-val_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\TEST/'
-test_path = r'C:\Users\bunny\Desktop\IoT\mega_2560_cat\VAL/'
+train_path = r'D:\Projects\IoT_recognition\20181028\Keras\train/'
+val_path = r'D:\Projects\IoT_recognition\20181028\Keras\TEST/'
+test_path = r'D:\Projects\IoT_recognition\20181028\Keras\VAL/'
 
 model = Sequential()
 
