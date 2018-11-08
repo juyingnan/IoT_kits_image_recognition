@@ -5,7 +5,7 @@ import random
 from scipy import io as sio
 
 
-def read_img_random(path, total_count, resize=None):
+def read_img_random(path, total_count, resize=None, as_gray=False):
     cate = [path + folder for folder in os.listdir(path) if os.path.isdir(path + folder)]
     imgs = []
     labels = []
@@ -18,10 +18,8 @@ def read_img_random(path, total_count, resize=None):
         while count < total_count and count < len(file_path_list):
             im = file_path_list[count]
             count += 1
-            img = io.imread(im)
+            img = io.imread(im, as_gray=as_gray)
             ratios.append([get_width_height_ratio(img)])
-            if img.shape[2] == 4:
-                img = img[:, :, :3]
             if resize is not None:
                 img = transform.resize(img, resize)
             imgs.append(img)
@@ -48,15 +46,7 @@ def calculate_average_hue_saturation(img, h=True, s=True, v=True):
 
 
 def get_raw_pixel_features(data):
-    if len(data.shape) == 3:
-        result = data.reshape(
-            (data.shape[0], data.shape[1] * data.shape[2]))
-    elif len(data.shape) == 4:
-        result = data.reshape(
-            (data.shape[0], data.shape[1] * data.shape[2] * data.shape[3]))
-    else:
-        result = []
-    return result
+    return data.flat
 
 
 def get_width_height_ratio(img):
@@ -71,7 +61,7 @@ def get_global_color_features(data):
     for i in range(len(data)):
         result.append([])
         img = data[i]
-        result[-1].extend(calculate_average_hue_saturation(img, h=True, s=False, v=False))
+        result[-1].extend(calculate_average_hue_saturation(img, h=True, s=True, v=True))
         # result[-1].extend(calculate_hue_distribution(img))
     return result
 
@@ -97,18 +87,18 @@ def get_d2_data(feature_result_list):
 
 
 if __name__ == '__main__':
-    w = 100
-    h = 100
+    w = 20
+    h = 20
     c = 3
     train_image_count = 10000
     category_count = 4
     train_path = r'D:\Projects\IoT_recognition\20181028\vis/'
     np.seterr(all='ignore')
+    train_data, train_label, ratios = read_img_random(train_path, train_image_count, resize=(w, h), as_gray=True)
+    d2_train_data = get_raw_pixel_features(train_data)
     # train_data, train_label, ratios = read_img_random(train_path, train_image_count, resize=(w, h))
-    # d2_train_data = get_raw_pixel_features(train_data)
-    train_data, train_label, ratios = read_img_random(train_path, train_image_count, resize=(w, h))
-    result_list = [ratios,
-                   get_global_color_features(train_data)]
-    d2_train_data = get_d2_data(result_list)
+    # result_list = [ratios,
+    #                get_global_color_features(train_data)]
+    # d2_train_data = get_d2_data(result_list)
 
-    sio.savemat(train_path + 'ratio_hue.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
+    sio.savemat(train_path + 'raw_20.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
