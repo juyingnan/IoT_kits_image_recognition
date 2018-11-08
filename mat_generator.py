@@ -46,7 +46,15 @@ def calculate_average_hue_saturation(img, h=True, s=True, v=True):
 
 
 def get_raw_pixel_features(data):
-    return data.flat
+    if len(data.shape) == 3:
+        result = data.reshape(
+            (data.shape[0], data.shape[1] * data.shape[2]))
+    elif len(data.shape) == 4:
+        result = data.reshape(
+            (data.shape[0], data.shape[1] * data.shape[2] * data.shape[3]))
+    else:
+        result = []
+    return result
 
 
 def get_width_height_ratio(img):
@@ -101,4 +109,4 @@ if __name__ == '__main__':
     #                get_global_color_features(train_data)]
     # d2_train_data = get_d2_data(result_list)
 
-    sio.savemat(train_path + 'raw_20.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
+    sio.savemat(train_path + 'ratio_20.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
