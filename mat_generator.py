@@ -95,8 +95,8 @@ def get_d2_data(feature_result_list):
 
 
 if __name__ == '__main__':
-    w = 20
-    h = 20
+    w = 50
+    h = 50
     c = 3
     train_image_count = 10000
     category_count = 4
@@ -109,4 +109,4 @@ if __name__ == '__main__':
     #                get_global_color_features(train_data)]
     # d2_train_data = get_d2_data(result_list)
 
-    sio.savemat(train_path + 'ratio_20.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
+    sio.savemat(train_path + 'raw_50.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
