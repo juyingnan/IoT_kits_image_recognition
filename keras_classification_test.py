@@ -50,32 +50,32 @@ def read_img_random(path, total_count):
 w = 150
 h = 150
 c = 3
-train_image_count = 10000
+train_image_count = 100000
 val_image_count = train_image_count / 10
 test_image_count = train_image_count / 10
 input_shape = (w, h, c)
 learning_rate = 0.0001
 regularization_rate = 0.00001
 category_count = 13 + 1
-n_epoch = 200
+n_epoch = 100
 mini_batch_size = 64
 # data set path
-train_path = r'D:\Projects\IoT_recognition\20181028\Keras\train/'
+train_path = r'D:\Projects\IoT_recognition\20181111\Keras\TRAIN/'
 val_path = r'D:\Projects\IoT_recognition\20181028\Keras\TEST/'
-test_path = r'D:\Projects\IoT_recognition\20181028\Keras\VAL/'
+test_path = r'D:\Projects\IoT_recognition\20181111\Keras\TEST/'
 
 model = Sequential()
 
 # Layer 1
 model.add(Conv2D(32,
-                 kernel_size=(5, 5),
+                 kernel_size=(3, 3),
                  strides=(1, 1),
                  activation='relu',
                  input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
 
 # Layer 2
-model.add(Conv2D(64, (5, 5), activation='relu'))
+model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 # Layer 3
