@@ -22,6 +22,8 @@ def read_img_random(path, total_count, resize=None, as_gray=False):
             ratios.append([get_width_height_ratio(img)])
             if resize is not None:
                 img = transform.resize(img, resize)
+            if img.shape == (w, h, c + 1):
+                img = img[:, :, :c]
             imgs.append(img)
             labels.append(idx)
             if count % 100 == 0:
@@ -95,12 +97,11 @@ def get_d2_data(feature_result_list):
 
 
 if __name__ == '__main__':
-    w = 50
-    h = 50
+    w = 20
+    h = 20
     c = 3
     train_image_count = 10000
-    category_count = 4
-    train_path = r'D:\Projects\IoT_recognition\20181028\vis/'
+    train_path = r'D:\Projects\IoT_recognition\20181111\vis_1k/'
     np.seterr(all='ignore')
     train_data, train_label, ratios = read_img_random(train_path, train_image_count, resize=(w, h), as_gray=True)
     d2_train_data = get_raw_pixel_features(train_data)
@@ -109,4 +110,4 @@ if __name__ == '__main__':
     #                get_global_color_features(train_data)]
     # d2_train_data = get_d2_data(result_list)
 
-    sio.savemat(train_path + 'raw_50.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
+    sio.savemat(train_path + 'raw_20.mat', mdict={'feature_matrix': d2_train_data, 'label': train_label})
