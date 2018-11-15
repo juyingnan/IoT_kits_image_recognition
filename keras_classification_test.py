@@ -61,7 +61,7 @@ n_epoch = 100
 mini_batch_size = 64
 # data set path
 train_path = r'D:\Projects\IoT_recognition\20181111\Keras\TRAIN/'
-val_path = r'D:\Projects\IoT_recognition\20181028\Keras\TEST/'
+val_path = r'D:\Projects\IoT_recognition\20181111\Keras\VAL/'
 test_path = r'D:\Projects\IoT_recognition\20181111\Keras\TEST/'
 
 model = Sequential()
