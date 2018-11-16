@@ -7,16 +7,19 @@ from skimage import transform
 import sys
 import time
 import math
+import csv
 
 
 def read_image(image_path):
     img = io.imread(image_path)
+    # print(img.shape)
     return img
 
 
 def get_component_position(img, is_using_thumb=True):
     thumb_img = img
     scale_index = 1
+    pixels = img.shape[0] * img.shape[1]
     if is_using_thumb:
         pixels = 300 * 400
         original_w = img.shape[0]
@@ -42,8 +45,10 @@ def get_component_position(img, is_using_thumb=True):
         x, y, w, h = r['rect']
         if h == 0 or w == 0:
             continue
-        # if w / h > 4 or h / w > 4:
-        #     continue
+        if r['size'] > pixels * 0.05:
+            continue
+        if w / h > 4 or h / w > 4:
+            continue
         candidates.add(r['rect'])
     if is_using_thumb:
         candidates = {tuple(int(loc * scale_index) for loc in candidate) for candidate in candidates}
@@ -125,6 +130,7 @@ def get_overlap_block(block_a, block_b):
 
     return [c1x, c1y, c2x - c1x, c2y - c1y]
 
+
 def draw_image(img, block_candidates):
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(8, 8))
@@ -136,10 +142,11 @@ def draw_image(img, block_candidates):
     plt.show()
 
 
-def draw_name_on_image(img, block_candidates, pred_cat):
+def draw_name_on_image(img, block_candidates, pred_cat, save_csv=False):
     # draw rectangles on the original image
     fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(20, 20))
     plt.imshow(img)
+    csv_lines = []
     for i in range(len(pred_cat)):
         category, confidence = pred_cat[i]
         if category != 0 and confidence > 0.50:
@@ -149,8 +156,13 @@ def draw_name_on_image(img, block_candidates, pred_cat):
             ax.add_patch(rect)
 
             plt.text(x_, y_, cat_list[category] + ' | ' + str(confidence), color='green', fontsize=16)
+            # csv_lines.append([img_path.split('\\')[-1], cat_list[category], x_, x_ + w_, y_, y_ + h_])
+            csv_lines.append([img_path.replace('\\', '/'), x_, y_, x_ + w_, y_ + h_, cat_list[category]])
     # plt.show()
     fig.savefig(result_path)
+    if save_csv:
+        csv_path = r'C:\Users\bunny\Desktop\test.csv'  # temp path
+        write_csv(csv_path, csv_lines)
 
 
 def get_max_and_confidence(pred_results):
@@ -161,6 +173,13 @@ def get_max_and_confidence(pred_results):
         index = result_as_list.index(max_confidence)
         cat_result.append((index, max_confidence))
     return cat_result
+
+
+def write_csv(path, lines):
+    with open(path, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        # writer.writerow((["image_name", "type", "start_x", "end_x", "start_y", "end_y"]))
+        writer.writerows(lines)
 
 
 img_path = r'C:/Users/bunny/Desktop/Iot/mega2560_raw/IMG_1287.JPG'
@@ -185,19 +204,14 @@ h_aver = sum([group[3] for group in raw_blocks]) / len(raw_blocks)
 # print(h_aver)
 w_aver = sum([group[2] for group in raw_blocks]) / len(raw_blocks)
 # print(w_aver)
-
-size_index = 2.5
-size_filtered_blocks = [group for group in raw_blocks if
-                        (group[2] <= w_aver * size_index and group[3] <= h_aver * size_index)]
-
-filtered_blocks = filter_block2(size_filtered_blocks)
+filtered_blocks = filter_block2(raw_blocks)
 # filtered_blocks = list(raw_blocks)
 # print(len(filtered_blocks))
 fp.write(str(len(filtered_blocks)) + '\n')
 # draw_image(image, filtered_blocks)
 
-w = 300
-h = 300
+w = 150
+h = 150
 c = 3
 
 sub_images = []
@@ -234,7 +248,7 @@ input_shape = (w, h, c)
 learning_rate = 0.0001
 regularization_rate = 0.0001
 category_count = 13 + 1
-train_path = r'C:\Users\bunny\Desktop\Iot\mega_2560_cat\TRAIN/'
+train_path = r'D:\Projects\IoT_recognition\20181111\Keras\TRAIN/'
 model = load_model(train_path + '/model.h5')
 
 ml_start_time = time.time()
@@ -258,7 +272,7 @@ cat_list = [
     "ultrasonic_sensor",
     "water_level_detection_sensor_module",
 ]
-draw_name_on_image(image, filtered_blocks, cat)
+draw_name_on_image(image, filtered_blocks, cat, save_csv=True)
 ml_end_time = time.time()
 machine_learning_time = ml_end_time - ml_start_time
 # print(machine_learning_time)
