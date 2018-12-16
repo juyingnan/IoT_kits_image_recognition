@@ -4,7 +4,6 @@ from __future__ import (
     print_function,
 )
 
-import skimage.data
 from skimage import io
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
