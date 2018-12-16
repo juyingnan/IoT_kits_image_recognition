@@ -4,7 +4,7 @@ import imageio
 import time
 import math
 from skimage import transform, io
-import selectivesearch
+from classification import selectivesearch
 
 
 def get_component_position(img, is_using_thumb=True):

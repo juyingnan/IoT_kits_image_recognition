@@ -3,8 +3,7 @@ import shutil
 import time
 import math
 from skimage import transform, io
-import numpy as np
-import selectivesearch
+from classification import selectivesearch
 
 
 def get_component_position(img, is_using_thumb=True):
@@ -132,7 +131,7 @@ def read_img_random(path, total_count):
     return imgs, labels
 
 
-root_path = r"D:\Projects\IoT_recognition\20181028\photos/"
+root_path = r"D:\Projects\IoT_recognition\20181028\raw/"
 result_path = root_path + 'result' + '/'
 frame_per_second = 60
 start_time = time.time()
