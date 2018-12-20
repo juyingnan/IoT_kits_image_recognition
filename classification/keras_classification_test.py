@@ -5,9 +5,10 @@ from skimage import io, transform
 import numpy as np
 from tensorflow import keras
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 from tensorflow.python.keras.models import Sequential
 import matplotlib.pylab as plt
+from sklearn import model_selection
 
 
 class AccuracyHistory(keras.callbacks.Callback):
@@ -36,7 +37,7 @@ def read_img_random(path, total_count):
             img = io.imread(im)
             if img.shape[2] == 4:
                 img = img[:, :, :3]
-            for angle in [0,90,180,270]:
+            for angle in [0, 90, 180, 270]:
                 _img = transform.rotate(img, angle)
                 _img = transform.resize(_img, (w, h))
                 imgs.append(_img)
@@ -54,15 +55,15 @@ train_image_count = 100000
 val_image_count = train_image_count / 10
 test_image_count = train_image_count / 10
 input_shape = (w, h, c)
-learning_rate = 0.0001
-regularization_rate = 0.00001
-category_count = 13 + 1
-n_epoch = 100
+learning_rate = 0.00001
+regularization_rate = 0.000001
+category_count = 30 + 1
+n_epoch = 500
 mini_batch_size = 64
 # data set path
-train_path = r'D:\Projects\IoT_recognition\20181111\Keras\TRAIN/'
-val_path = r'D:\Projects\IoT_recognition\20181111\Keras\VAL/'
-test_path = r'D:\Projects\IoT_recognition\20181111\Keras\TEST/'
+train_path = r'D:\Projects\IoT_recognition\20181205\Keras\TRAIN/'
+val_path = r'D:\Projects\IoT_recognition\20181205\Keras\VAL/'
+test_path = r'D:\Projects\IoT_recognition\20181205\Keras\TEST/'
 
 model = Sequential()
 
@@ -77,6 +78,7 @@ model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
 # Layer 2
 model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.1))
 
 # Layer 3
 model.add(Conv2D(128, (3, 3), activation='relu'))
@@ -85,6 +87,7 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 # Layer 4
 model.add(Conv2D(256, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.2))
 
 # flatten
 model.add(Flatten(input_shape=input_shape))
@@ -94,17 +97,27 @@ model.add(Dense(128, activation='relu', kernel_regularizer=regularizers.l2(regul
 model.add(Dense(64, activation='relu', kernel_regularizer=regularizers.l2(regularization_rate)))
 model.add(Dense(category_count, activation='softmax', kernel_regularizer=regularizers.l2(regularization_rate)))
 
+early_stopper = keras.callbacks.EarlyStopping(monitor='val_loss',
+                                              min_delta=0,
+                                              patience=0,
+                                              verbose=0, mode='auto')
+
 # read image
 train_data, train_label = read_img_random(train_path, train_image_count)
-val_data, val_label = read_img_random(val_path, val_image_count)
-test_data, test_label = read_img_random(test_path, test_image_count)
+# val_data, val_label = read_img_random(val_path, val_image_count)
+# test_data, test_label = read_img_random(test_path, test_image_count)
 
-x_train = train_data
-y_train = train_label
-x_val = val_data
-y_val = val_label
-x_test = test_data
-y_test = test_label
+x_train, x_test, y_train, y_test = model_selection.train_test_split(train_data, train_label, test_size=0.2)
+
+# x_train = train_data
+# y_train = train_label
+# x_val = val_data
+# y_val = val_label
+# x_test = test_data
+# y_test = test_label
+
+x_val = x_test
+y_val = y_test
 
 # reshape the data into a 4D tensor - (sample_number, x_img_size, y_img_size, num_channels)
 # because the MNIST is greyscale, we only have a single channel - RGB colour images would have 3
