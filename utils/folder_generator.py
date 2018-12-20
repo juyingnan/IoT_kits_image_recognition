@@ -11,9 +11,9 @@ def make_dir(path):
 
 
 root_path = r"D:\Projects\IoT_recognition\20181205\keras\TRAIN/"
-folder_name_list = ['7_segment_display',
+folder_name_list = ['16_pin_chip',
+                    '7_segment_display',
                     '9v_battery',
-                    '16_pin_chip',
                     'blank',
                     'buzzer',
                     'capacitor',
