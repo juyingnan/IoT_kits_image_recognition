@@ -30,8 +30,7 @@ def get_component_position(img, is_using_thumb=True):
         new_h = int(original_h / scale_index)
         thumb_img = transform.resize(img, (new_w, new_h))
     # perform selective search
-    img_lbl, regions = selectivesearch.selective_search(
-        thumb_img, scale=4000, sigma=0.4, min_size=60)
+    img_lbl, regions = selectivesearch.selective_search(thumb_img, scale=4000, sigma=0.4, min_size=2)
 
     candidates = set()
     for r in regions:
@@ -149,7 +148,7 @@ def draw_name_on_image(img, block_candidates, pred_cat, save_csv=False):
     csv_lines = []
     for i in range(len(pred_cat)):
         category, confidence = pred_cat[i]
-        if category != 0 and confidence > 0.50:
+        if cat_list[category] != 'blank' and confidence > 0.50:
             x_, y_, w_, h_ = block_candidates[i]
 
             rect = mpatches.Rectangle((x_, y_), w_, h_, fill=False, edgecolor='red', linewidth=1)
@@ -182,7 +181,7 @@ def write_csv(path, lines):
         writer.writerows(lines)
 
 
-img_path = r'C:/Users/bunny/Desktop/Iot/mega2560_raw/IMG_1287.JPG'
+img_path = r'C:\Users\bunny\Desktop/IMG_2880.JPG'
 if len(sys.argv) < 2:
     print("parameter: file path")
     print("now use default path")
@@ -232,10 +231,10 @@ pre_processing_time = pre_end_time - start_time
 fp.write(str(pre_processing_time) + '\n')
 
 # TensorFlow part
-# from tensorflow import keras
-# from tensorflow.python.keras import regularizers
-# from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
-# from tensorflow.python.keras.models import Sequential
+from tensorflow import keras
+from tensorflow.python.keras import regularizers
+from tensorflow.python.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+from tensorflow.python.keras.models import Sequential
 from keras.models import load_model
 import tensorflow as tf
 from tensorflow.python.keras.backend import set_session
@@ -248,7 +247,7 @@ input_shape = (w, h, c)
 learning_rate = 0.0001
 regularization_rate = 0.0001
 category_count = 13 + 1
-train_path = r'D:\Projects\IoT_recognition\20181111\Keras\TRAIN/'
+train_path = r'D:\Projects\IoT_recognition\20181205\Keras\TRAIN/'
 model = load_model(train_path + '/model.h5')
 
 ml_start_time = time.time()
@@ -256,22 +255,38 @@ ml_start_time = time.time()
 result = model.predict(np.asarray(sub_images, np.float32))
 # cat = model.predict_classes(np.asarray(sub_images, np.float32))
 cat = get_max_and_confidence(result)
-cat_list = [
-    "blank",
-    "gy-521_module",
-    "ir_receiver_module",
-    "max7219_module",
-    "mega2560_controller_board",
-    "pir_motion_sensor_HC-SR501",
-    "power_supply_module",
-    "relay_5v",
-    "rotary_encoder_module",
-    "sound_sensor_module",
-    "stepper_motor_driver_board_uln2003",
-    "temperature_and_humidity_module_DHT11",
-    "ultrasonic_sensor",
-    "water_level_detection_sensor_module",
-]
+cat_list = ['16_pin_chip',
+            '7_segment_display',
+            '9v_battery',
+            'blank',
+            'buzzer',
+            'capacitor',
+            'ds3231_rtc_module',
+            'gy-521_module',
+            'ir_receiver_module',
+            'joystick_module',
+            'lcd_module',
+            'max7219_module',
+            'mega2560_controller_board',
+            'membrance_switch_module',
+            'motor',
+            'pir_motion_sensor_HC-SR501',
+            'power_supply_module',
+            'prototype_expansion_board',
+            'relay_5v',
+            'remote',
+            'rfid_module',
+            'rotary_encoder_module',
+            'servo_motor',
+            'sound_sensor_module',
+            'stepper_motor',
+            'stepper_motor_driver_board_uln2003',
+            'temperature_and_humidity_module_DHT11',
+            'tilt_ball_switch',
+            'transistor',
+            'ultrasonic_sensor',
+            'water_level_detection_sensor_module',
+            ]
 draw_name_on_image(image, filtered_blocks, cat, save_csv=True)
 ml_end_time = time.time()
 machine_learning_time = ml_end_time - ml_start_time
